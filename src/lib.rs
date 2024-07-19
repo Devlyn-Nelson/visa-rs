@@ -394,19 +394,14 @@ const SUCCESS: vs::ViStatus = vs::VI_SUCCESS as _;
 #[macro_export]
 macro_rules! wrap_raw_error_in_unsafe {
     ($s:expr) => {
-        match unsafe { $s } {
-            state if state >= $crate::SUCCESS => {
-                match state.try_into() {
-                    Ok(thing) => $crate::Result::<$crate::enums::status::CompletionCode>::Ok(thing),
-                    Err(_err) => {
-                        let thing = state.into();
-                        $crate::Result::<$crate::enums::status::CompletionCode>::Err(thing)
-                    }
+        {
+            let state = unsafe{$s};
+            match state.try_into() {
+                Ok(thing) => $crate::Result::<$crate::enums::status::CompletionCode>::Ok(thing),
+                Err(_err) => {
+                    let thing = state.into();
+                    $crate::Result::<$crate::enums::status::CompletionCode>::Err(thing)
                 }
-            }
-            e => {
-                let err = e.into();
-                $crate::Result::<$crate::enums::status::CompletionCode>::Err(err)
             }
         }
     };
