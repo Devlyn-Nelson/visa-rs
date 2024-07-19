@@ -121,7 +121,7 @@ impl std::error::Error for Error {}
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+        write!(f, "{:?}", self.0)
     }
 }
 
@@ -143,10 +143,189 @@ impl From<Error> for vs::ViStatus {
     }
 }
 
-impl TryFrom<vs::ViStatus> for Error {
-    type Error = <enums::status::ErrorCode as TryFrom<vs::ViStatus>>::Error;
-    fn try_from(value: vs::ViStatus) -> std::result::Result<Self, Self::Error> {
-        Ok(Self(value.try_into()?))
+impl From<enums::status::ErrorCode> for vs::ViStatus {
+    fn from(s: enums::status::ErrorCode) -> Self {
+        match s {
+            enums::status::ErrorCode::ErrorSystemError => 0xBFFF0000,
+            enums::status::ErrorCode::ErrorInvObject => 0xBFFF000E,
+            enums::status::ErrorCode::ErrorRsrcLocked => 0xBFFF000F,
+            enums::status::ErrorCode::ErrorInvExpr => 0xBFFF0010,
+            enums::status::ErrorCode::ErrorRsrcNfound => 0xBFFF0011,
+            enums::status::ErrorCode::ErrorInvRsrcName => 0xBFFF0012,
+            enums::status::ErrorCode::ErrorInvAccMode => 0xBFFF0013,
+            enums::status::ErrorCode::ErrorTmo => 0xBFFF0015,
+            enums::status::ErrorCode::ErrorClosingFailed => 0xBFFF0016,
+            enums::status::ErrorCode::ErrorInvDegree => 0xBFFF001B,
+            enums::status::ErrorCode::ErrorInvJobId => 0xBFFF001C,
+            enums::status::ErrorCode::ErrorNsupAttr => 0xBFFF001D,
+            enums::status::ErrorCode::ErrorNsupAttrState => 0xBFFF001E,
+            enums::status::ErrorCode::ErrorAttrReadonly => 0xBFFF001F,
+            enums::status::ErrorCode::ErrorInvLockType => 0xBFFF0020,
+            enums::status::ErrorCode::ErrorInvAccessKey => 0xBFFF0021,
+            enums::status::ErrorCode::ErrorInvEvent => 0xBFFF0026,
+            enums::status::ErrorCode::ErrorInvMech => 0xBFFF0027,
+            enums::status::ErrorCode::ErrorHndlrNinstalled => 0xBFFF0028,
+            enums::status::ErrorCode::ErrorInvHndlrRef => 0xBFFF0029,
+            enums::status::ErrorCode::ErrorInvContext => 0xBFFF002A,
+            enums::status::ErrorCode::ErrorQueueOverflow => 0xBFFF002D,
+            enums::status::ErrorCode::ErrorNenabled => 0xBFFF002F,
+            enums::status::ErrorCode::ErrorAbort => 0xBFFF0030,
+            enums::status::ErrorCode::ErrorRawWrProtViol => 0xBFFF0034,
+            enums::status::ErrorCode::ErrorRawRdProtViol => 0xBFFF0035,
+            enums::status::ErrorCode::ErrorOutpProtViol => 0xBFFF0036,
+            enums::status::ErrorCode::ErrorInpProtViol => 0xBFFF0037,
+            enums::status::ErrorCode::ErrorBerr => 0xBFFF0038,
+            enums::status::ErrorCode::ErrorInProgress => 0xBFFF0039,
+            enums::status::ErrorCode::ErrorInvSetup => 0xBFFF003A,
+            enums::status::ErrorCode::ErrorQueueError => 0xBFFF003B,
+            enums::status::ErrorCode::ErrorAlloc => 0xBFFF003C,
+            enums::status::ErrorCode::ErrorInvMask => 0xBFFF003D,
+            enums::status::ErrorCode::ErrorIo => 0xBFFF003E,
+            enums::status::ErrorCode::ErrorInvFmt => 0xBFFF003F,
+            enums::status::ErrorCode::ErrorNsupFmt => 0xBFFF0041,
+            enums::status::ErrorCode::ErrorLineInUse => 0xBFFF0042,
+            enums::status::ErrorCode::ErrorNsupMode => 0xBFFF0046,
+            enums::status::ErrorCode::ErrorSrqNoccurred => 0xBFFF004A,
+            enums::status::ErrorCode::ErrorInvSpace => 0xBFFF004E,
+            enums::status::ErrorCode::ErrorInvOffset => 0xBFFF0051,
+            enums::status::ErrorCode::ErrorInvWidth => 0xBFFF0052,
+            enums::status::ErrorCode::ErrorNsupOffset => 0xBFFF0054,
+            enums::status::ErrorCode::ErrorNsupVarWidth => 0xBFFF0055,
+            enums::status::ErrorCode::ErrorWindowNmapped => 0xBFFF0057,
+            enums::status::ErrorCode::ErrorRespPending => 0xBFFF0059,
+            enums::status::ErrorCode::ErrorNlisteners => 0xBFFF005F,
+            enums::status::ErrorCode::ErrorNcic => 0xBFFF0060,
+            enums::status::ErrorCode::ErrorNsysCntlr => 0xBFFF0061,
+            enums::status::ErrorCode::ErrorNsupOper => 0xBFFF0067,
+            enums::status::ErrorCode::ErrorIntrPending => 0xBFFF0068,
+            enums::status::ErrorCode::ErrorAsrlParity => 0xBFFF006A,
+            enums::status::ErrorCode::ErrorAsrlFraming => 0xBFFF006B,
+            enums::status::ErrorCode::ErrorAsrlOverrun => 0xBFFF006C,
+            enums::status::ErrorCode::ErrorTrigNmapped => 0xBFFF006E,
+            enums::status::ErrorCode::ErrorNsupAlignOffset => 0xBFFF0070,
+            enums::status::ErrorCode::ErrorUserBuf => 0xBFFF0071,
+            enums::status::ErrorCode::ErrorRsrcBusy => 0xBFFF0072,
+            enums::status::ErrorCode::ErrorNsupWidth => 0xBFFF0076,
+            enums::status::ErrorCode::ErrorInvParameter => 0xBFFF0078,
+            enums::status::ErrorCode::ErrorInvProt => 0xBFFF0079,
+            enums::status::ErrorCode::ErrorInvSize => 0xBFFF007B,
+            enums::status::ErrorCode::ErrorWindowMapped => 0xBFFF0080,
+            enums::status::ErrorCode::ErrorNimplOper => 0xBFFF0081,
+            enums::status::ErrorCode::ErrorInvLength => 0xBFFF0083,
+            enums::status::ErrorCode::ErrorInvMode => 0xBFFF0091,
+            enums::status::ErrorCode::ErrorSesnNlocked => 0xBFFF009C,
+            enums::status::ErrorCode::ErrorMemNshared => 0xBFFF009D,
+            enums::status::ErrorCode::ErrorLibraryNfound => 0xBFFF009E,
+            enums::status::ErrorCode::ErrorNsupIntr => 0xBFFF009F,
+            enums::status::ErrorCode::ErrorInvLine => 0xBFFF00A0,
+            enums::status::ErrorCode::ErrorFileAccess => 0xBFFF00A1,
+            enums::status::ErrorCode::ErrorFileIo => 0xBFFF00A2,
+            enums::status::ErrorCode::ErrorNsupLine => 0xBFFF00A3,
+            enums::status::ErrorCode::ErrorNsupMech => 0xBFFF00A4,
+            enums::status::ErrorCode::ErrorIntfNumNconfig => 0xBFFF00A5,
+            enums::status::ErrorCode::ErrorConnLost => 0xBFFF00A6,
+            enums::status::ErrorCode::ErrorMachineNavail => 0xBFFF00A7,
+            enums::status::ErrorCode::ErrorNpermission => 0xBFFF00A8,
+            enums::status::ErrorCode::ErrorUnknown(x) => x,
+        }
+    }
+}
+
+impl From<vs::ViStatus> for enums::status::ErrorCode {
+    fn from(value: vs::ViStatus) -> Self {
+        match value {
+            0xBFFF0000 => enums::status::ErrorCode::ErrorSystemError,
+            0xBFFF000E => enums::status::ErrorCode::ErrorInvObject,
+            0xBFFF000F => enums::status::ErrorCode::ErrorRsrcLocked,
+            0xBFFF0010 => enums::status::ErrorCode::ErrorInvExpr,
+            0xBFFF0011 => enums::status::ErrorCode::ErrorRsrcNfound,
+            0xBFFF0012 => enums::status::ErrorCode::ErrorInvRsrcName,
+            0xBFFF0013 => enums::status::ErrorCode::ErrorInvAccMode,
+            0xBFFF0015 => enums::status::ErrorCode::ErrorTmo,
+            0xBFFF0016 => enums::status::ErrorCode::ErrorClosingFailed,
+            0xBFFF001B => enums::status::ErrorCode::ErrorInvDegree,
+            0xBFFF001C => enums::status::ErrorCode::ErrorInvJobId,
+            0xBFFF001D => enums::status::ErrorCode::ErrorNsupAttr,
+            0xBFFF001E => enums::status::ErrorCode::ErrorNsupAttrState,
+            0xBFFF001F => enums::status::ErrorCode::ErrorAttrReadonly,
+            0xBFFF0020 => enums::status::ErrorCode::ErrorInvLockType,
+            0xBFFF0021 => enums::status::ErrorCode::ErrorInvAccessKey,
+            0xBFFF0026 => enums::status::ErrorCode::ErrorInvEvent,
+            0xBFFF0027 => enums::status::ErrorCode::ErrorInvMech,
+            0xBFFF0028 => enums::status::ErrorCode::ErrorHndlrNinstalled,
+            0xBFFF0029 => enums::status::ErrorCode::ErrorInvHndlrRef,
+            0xBFFF002A => enums::status::ErrorCode::ErrorInvContext,
+            0xBFFF002D => enums::status::ErrorCode::ErrorQueueOverflow,
+            0xBFFF002F => enums::status::ErrorCode::ErrorNenabled,
+            0xBFFF0030 => enums::status::ErrorCode::ErrorAbort,
+            0xBFFF0034 => enums::status::ErrorCode::ErrorRawWrProtViol,
+            0xBFFF0035 => enums::status::ErrorCode::ErrorRawRdProtViol,
+            0xBFFF0036 => enums::status::ErrorCode::ErrorOutpProtViol,
+            0xBFFF0037 => enums::status::ErrorCode::ErrorInpProtViol,
+            0xBFFF0038 => enums::status::ErrorCode::ErrorBerr,
+            0xBFFF0039 => enums::status::ErrorCode::ErrorInProgress,
+            0xBFFF003A => enums::status::ErrorCode::ErrorInvSetup,
+            0xBFFF003B => enums::status::ErrorCode::ErrorQueueError,
+            0xBFFF003C => enums::status::ErrorCode::ErrorAlloc,
+            0xBFFF003D => enums::status::ErrorCode::ErrorInvMask,
+            0xBFFF003E => enums::status::ErrorCode::ErrorIo,
+            0xBFFF003F => enums::status::ErrorCode::ErrorInvFmt,
+            0xBFFF0041 => enums::status::ErrorCode::ErrorNsupFmt,
+            0xBFFF0042 => enums::status::ErrorCode::ErrorLineInUse,
+            0xBFFF0046 => enums::status::ErrorCode::ErrorNsupMode,
+            0xBFFF004A => enums::status::ErrorCode::ErrorSrqNoccurred,
+            0xBFFF004E => enums::status::ErrorCode::ErrorInvSpace,
+            0xBFFF0051 => enums::status::ErrorCode::ErrorInvOffset,
+            0xBFFF0052 => enums::status::ErrorCode::ErrorInvWidth,
+            0xBFFF0054 => enums::status::ErrorCode::ErrorNsupOffset,
+            0xBFFF0055 => enums::status::ErrorCode::ErrorNsupVarWidth,
+            0xBFFF0057 => enums::status::ErrorCode::ErrorWindowNmapped,
+            0xBFFF0059 => enums::status::ErrorCode::ErrorRespPending,
+            0xBFFF005F => enums::status::ErrorCode::ErrorNlisteners,
+            0xBFFF0060 => enums::status::ErrorCode::ErrorNcic,
+            0xBFFF0061 => enums::status::ErrorCode::ErrorNsysCntlr,
+            0xBFFF0067 => enums::status::ErrorCode::ErrorNsupOper,
+            0xBFFF0068 => enums::status::ErrorCode::ErrorIntrPending,
+            0xBFFF006A => enums::status::ErrorCode::ErrorAsrlParity,
+            0xBFFF006B => enums::status::ErrorCode::ErrorAsrlFraming,
+            0xBFFF006C => enums::status::ErrorCode::ErrorAsrlOverrun,
+            0xBFFF006E => enums::status::ErrorCode::ErrorTrigNmapped,
+            0xBFFF0070 => enums::status::ErrorCode::ErrorNsupAlignOffset,
+            0xBFFF0071 => enums::status::ErrorCode::ErrorUserBuf,
+            0xBFFF0072 => enums::status::ErrorCode::ErrorRsrcBusy,
+            0xBFFF0076 => enums::status::ErrorCode::ErrorNsupWidth,
+            0xBFFF0078 => enums::status::ErrorCode::ErrorInvParameter,
+            0xBFFF0079 => enums::status::ErrorCode::ErrorInvProt,
+            0xBFFF007B => enums::status::ErrorCode::ErrorInvSize,
+            0xBFFF0080 => enums::status::ErrorCode::ErrorWindowMapped,
+            0xBFFF0081 => enums::status::ErrorCode::ErrorNimplOper,
+            0xBFFF0083 => enums::status::ErrorCode::ErrorInvLength,
+            0xBFFF0091 => enums::status::ErrorCode::ErrorInvMode,
+            0xBFFF009C => enums::status::ErrorCode::ErrorSesnNlocked,
+            0xBFFF009D => enums::status::ErrorCode::ErrorMemNshared,
+            0xBFFF009E => enums::status::ErrorCode::ErrorLibraryNfound,
+            0xBFFF009F => enums::status::ErrorCode::ErrorNsupIntr,
+            0xBFFF00A0 => enums::status::ErrorCode::ErrorInvLine,
+            0xBFFF00A1 => enums::status::ErrorCode::ErrorFileAccess,
+            0xBFFF00A2 => enums::status::ErrorCode::ErrorFileIo,
+            0xBFFF00A3 => enums::status::ErrorCode::ErrorNsupLine,
+            0xBFFF00A4 => enums::status::ErrorCode::ErrorNsupMech,
+            0xBFFF00A5 => enums::status::ErrorCode::ErrorIntfNumNconfig,
+            0xBFFF00A6 => enums::status::ErrorCode::ErrorConnLost,
+            0xBFFF00A7 => enums::status::ErrorCode::ErrorMachineNavail,
+            0xBFFF00A8 => enums::status::ErrorCode::ErrorNpermission,
+            x => enums::status::ErrorCode::ErrorUnknown(x),
+        }
+    }
+}
+
+impl From<vs::ViStatus> for Error {
+    fn from(value: vs::ViStatus) -> Self {
+        // let new_val = match <i64 as TryInto<enums::status::ErrorCode>>::try_into(value) {
+        //     Ok(thing) => todo!("thing = {thing:?}"),
+        //     Err(err) => todo!("err = {err:?}"),
+        // };
+        Self(value.into())
     }
 }
 
@@ -173,25 +352,25 @@ pub fn io_to_vs_err(e: std::io::Error) -> Error {
 }
 
 fn vs_to_io_err(err: Error) -> std::io::Error {
-    use enums::status::ErrorCode::*;
+    use enums::status::ErrorCode;
     use std::io::ErrorKind::*;
     std::io::Error::new(
-        match err.0 {
-            ErrorInvObject => AddrNotAvailable,
-            ErrorNsupOper => Unsupported,
-            ErrorRsrcLocked => ConnectionRefused,
-            ErrorTmo => TimedOut,
-            ErrorRawWrProtViol | ErrorRawRdProtViol => InvalidData,
-            ErrorInpProtViol | ErrorOutpProtViol => BrokenPipe,
-            ErrorBerr => BrokenPipe,
-            ErrorInvSetup => InvalidInput,
-            ErrorNcic => PermissionDenied,
-            ErrorNlisteners => Other,
-            ErrorAsrlParity | ErrorAsrlFraming => Other,
-            ErrorAsrlOverrun => Other,
-            ErrorConnLost => BrokenPipe,
-            ErrorInvMask => InvalidInput,
-            ErrorIo => std::io::Error::last_os_error().kind(),
+        match &err.0 {
+            ErrorCode::ErrorInvObject => AddrNotAvailable,
+            ErrorCode::ErrorNsupOper => Unsupported,
+            ErrorCode::ErrorRsrcLocked => ConnectionRefused,
+            ErrorCode::ErrorTmo => TimedOut,
+            ErrorCode::ErrorRawWrProtViol | ErrorCode::ErrorRawRdProtViol => InvalidData,
+            ErrorCode::ErrorInpProtViol | ErrorCode::ErrorOutpProtViol => BrokenPipe,
+            ErrorCode::ErrorBerr => BrokenPipe,
+            ErrorCode::ErrorInvSetup => InvalidInput,
+            ErrorCode::ErrorNcic => PermissionDenied,
+            ErrorCode::ErrorNlisteners => Other,
+            ErrorCode::ErrorAsrlParity | ErrorCode::ErrorAsrlFraming => Other,
+            ErrorCode::ErrorAsrlOverrun => Other,
+            ErrorCode::ErrorConnLost => BrokenPipe,
+            ErrorCode::ErrorInvMask => InvalidInput,
+            ErrorCode::ErrorIo => std::io::Error::last_os_error().kind(),
             _ => unreachable!(),
         },
         err,
@@ -216,11 +395,18 @@ const SUCCESS: vs::ViStatus = vs::VI_SUCCESS as _;
 macro_rules! wrap_raw_error_in_unsafe {
     ($s:expr) => {
         match unsafe { $s } {
-            state if state >= $crate::SUCCESS => $crate::Result::<
-                $crate::enums::status::CompletionCode,
-            >::Ok(state.try_into().unwrap()),
+            state if state >= $crate::SUCCESS => {
+                match state.try_into() {
+                    Ok(thing) => $crate::Result::<$crate::enums::status::CompletionCode>::Ok(thing),
+                    Err(_err) => {
+                        let thing = state.into();
+                        $crate::Result::<$crate::enums::status::CompletionCode>::Err(thing)
+                    }
+                }
+            }
             e => {
-                $crate::Result::<$crate::enums::status::CompletionCode>::Err(e.try_into().unwrap())
+                let err = e.into();
+                $crate::Result::<$crate::enums::status::CompletionCode>::Err(err)
             }
         }
     };
