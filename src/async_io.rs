@@ -34,12 +34,13 @@ impl<'b> AsyncIoHandler<'b> {
         let job_id = Arc::new(Mutex::new(None));
         let (callback, rec) = AsyncIoCallbackPack::new(Arc::downgrade(&waker), job_id.clone());
         let callback = NonNull::new(Box::into_raw(Box::new(callback))).unwrap();
-        super::wrap_raw_error_in_unsafe!(vs::viInstallHandler(
+        let ni_visa_result = unsafe{vs::viInstallHandler(
             instr.as_raw_ss(),
             event::EventKind::EventIoCompletion as _,
             Some(AsyncIoCallbackPack::call_in_c),
             callback.as_ptr() as _
-        ))?;
+        )};
+        super::wrap_raw_error_in_unsafe(ni_visa_result)?;
         instr.enable_event(
             event::EventKind::EventIoCompletion,
             event::Mechanism::Handler,
@@ -71,7 +72,8 @@ impl<'b> AsyncIoHandler<'b> {
 impl<'b> Drop for AsyncIoHandler<'b> {
     fn drop(&mut self) {
         fn terminate_async(ss: BorrowedSs<'_>, job_id: JobID) -> Result<()> {
-            wrap_raw_error_in_unsafe!(vs::viTerminate(ss.as_raw_ss(), vs::VI_NULL as _, job_id.0))?;
+            let ni_visa_result = unsafe{vs::viTerminate(ss.as_raw_ss(), vs::VI_NULL as _, job_id.0)};
+            wrap_raw_error_in_unsafe(ni_visa_result)?;
             Ok(())
         }
         // None while not spawned and job finished
@@ -81,12 +83,13 @@ impl<'b> Drop for AsyncIoHandler<'b> {
                 log::warn!("terminating async io: {}", e)
             };
         }
-        if let Err(e) = wrap_raw_error_in_unsafe!(vs::viUninstallHandler(
+        let ni_visa_result = unsafe{vs::viUninstallHandler(
             self.instr.as_raw_ss(),
             event::EventKind::EventIoCompletion as _,
             Some(AsyncIoCallbackPack::call_in_c),
             self.callback.as_ptr() as _,
-        )) {
+        )};
+        if let Err(e) = wrap_raw_error_in_unsafe(ni_visa_result) {
             log::warn!("uninstalling handler: {}", e)
         };
         drop(unsafe { Box::from_raw(self.callback.as_ptr()) });
@@ -132,7 +135,7 @@ impl AsyncIoCallbackPack {
         }
         fn get_ret(event: &event::Event) -> Result<usize> {
             #[allow(unused_unsafe)]
-            wrap_raw_error_in_unsafe!(attribute::AttrStatus::get_from(event)?.into_inner())?;
+            wrap_raw_error_in_unsafe(attribute::AttrStatus::get_from(event)?.into_inner())?;
             let ret: usize = attribute::AttrRetCount::get_from(event)?.into_inner() as _;
             Ok(ret)
         }

@@ -95,20 +95,22 @@ pub trait HasAttribute: crate::session::AsRawSs {
     /// if want a specific attribute, use [`SpecAttr::get_from`]
     fn get_attr(&self, attr_kind: AttrKind) -> Result<Attribute> {
         let mut attr = unsafe { Attribute::from_kind(attr_kind) };
-        wrap_raw_error_in_unsafe!(vs::viGetAttribute(
+        let ni_visa_result = unsafe{vs::viGetAttribute(
             self.as_raw_ss(),
             attr_kind as _,
             attr.mut_c_void()
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(attr)
     }
     fn set_attr(&self, attr: impl Into<Attribute>) -> Result<()> {
         let attr: Attribute = attr.into();
-        wrap_raw_error_in_unsafe!(vs::viSetAttribute(
+        let ni_visa_result = unsafe{vs::viSetAttribute(
             self.as_raw_ss(),
             attr.kind() as _,
             attr.as_attr_state(),
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 }
@@ -129,11 +131,12 @@ pub trait SpecAttr: Sized {
     fn mut_c_void(&mut self) -> *mut ::std::ffi::c_void;
     fn get_from<S: HasAttribute>(s: &S) -> Result<Self> {
         let mut ret = unsafe { Self::zero() };
-        wrap_raw_error_in_unsafe!(vs::viGetAttribute(
+        let ni_visa_result = unsafe{vs::viGetAttribute(
             s.as_raw_ss(),
             Self::KIND as _,
             ret.mut_c_void()
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ret)
     }
 }

@@ -121,12 +121,13 @@ impl<'b, F: Callback> Handler<'b, F> {
         callback: F,
     ) -> Result<Self> {
         let (callback, rec) = CallbackWrapper::new(callback);
-        super::wrap_raw_error_in_unsafe!(vs::viInstallHandler(
+        let ni_visa_result = unsafe{vs::viInstallHandler(
             instr.as_raw_ss(),
             event_kind as _,
             Some(callback.hold),
             callback.f.as_ptr() as _
-        ))?;
+        )};
+        super::wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(Self {
             instr,
             rec,

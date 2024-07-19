@@ -22,12 +22,13 @@ impl std::io::Read for Instrument {
 impl std::io::Write for &Instrument {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         let mut ret_cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viWrite(
+        let ni_visa_result = unsafe{vs::viWrite(
             self.as_raw_ss(),
             buf.as_ptr(),
             buf.len() as _,
             &mut ret_cnt as _
-        ))
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)
         .map_err(vs_to_io_err)?;
 
         Ok(ret_cnt as _)
@@ -43,12 +44,13 @@ impl std::io::Write for &Instrument {
 impl std::io::Read for &Instrument {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let mut ret_cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viRead(
+        let ni_visa_result = unsafe{vs::viRead(
             self.as_raw_ss(),
             buf.as_mut_ptr(),
             buf.len() as _,
             &mut ret_cnt as _
-        ))
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)
         .map_err(vs_to_io_err)?;
         Ok(ret_cnt as _)
     }
@@ -57,17 +59,19 @@ impl std::io::Read for &Instrument {
 impl Instrument {
     ///Manually flushes the specified buffers associated with formatted I/O operations and/or serial communication.
     pub fn visa_flush(&self, mode: flags::FlushMode) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viFlush(self.as_raw_ss(), mode.bits()))?;
+        let ni_visa_result = unsafe{vs::viFlush(self.as_raw_ss(), mode.bits())};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Returns a user-readable description of the status code passed to the operation.
     pub fn status_desc(&self, error: Error) -> Result<VisaString> {
         let mut desc: VisaBuf = new_visa_buf();
-        wrap_raw_error_in_unsafe!(vs::viStatusDesc(
+        let ni_visa_result = unsafe{vs::viStatusDesc(
             self.as_raw_ss(),
             error.into(),
             desc.as_mut_ptr() as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(desc.try_into().unwrap())
     }
     /// Establishes an access mode to the specified resources.
@@ -91,66 +95,72 @@ impl Instrument {
         key: Option<AccessKey>,
     ) -> Result<Option<AccessKey>> {
         if (mode & flags::AccessMode::SHARED_LOCK).is_empty() {
-            wrap_raw_error_in_unsafe!(vs::viLock(
+        let ni_visa_result = unsafe{vs::viLock(
                 self.as_raw_ss(),
                 mode.bits(),
                 timeout.as_millis() as _,
                 vs::VI_NULL as _,
                 vs::VI_NULL as _
-            ))?;
+            )};
+            wrap_raw_error_in_unsafe(ni_visa_result)?;
             Ok(None)
         } else {
             let mut ak = new_visa_buf();
-            wrap_raw_error_in_unsafe!(vs::viLock(
+        let ni_visa_result = unsafe{vs::viLock(
                 self.as_raw_ss(),
                 mode.bits(),
                 timeout.as_millis() as _,
                 key.map(|x| x.as_vi_const_string())
                     .unwrap_or(vs::VI_NULL as _),
                 ak.as_mut_ptr() as _
-            ))?;
+            )};
+            wrap_raw_error_in_unsafe(ni_visa_result)?;
             Ok(Some(ak.try_into().unwrap()))
         }
     }
 
     pub fn lock_exclusive(&self, timeout: Duration) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viLock(
+        let ni_visa_result = unsafe{vs::viLock(
             self.as_raw_ss(),
             flags::AccessMode::EXCLUSIVE_LOCK.bits(),
             timeout.as_millis() as _,
             vs::VI_NULL as _,
             vs::VI_NULL as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
     pub fn lock_shared(&self, timeout: Duration) -> Result<AccessKey> {
         let mut ak = new_visa_buf();
-        wrap_raw_error_in_unsafe!(vs::viLock(
+        let ni_visa_result = unsafe{vs::viLock(
             self.as_raw_ss(),
             flags::AccessMode::EXCLUSIVE_LOCK.bits(),
             timeout.as_millis() as _,
             vs::VI_NULL as _,
             ak.as_mut_ptr() as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ak.try_into().unwrap())
     }
 
     pub fn lock_shared_with_key(&self, timeout: Duration, key: AccessKey) -> Result<AccessKey> {
         let mut ak = new_visa_buf();
-        wrap_raw_error_in_unsafe!(vs::viLock(
+        let ni_visa_result = unsafe{vs::viLock(
             self.as_raw_ss(),
             flags::AccessMode::EXCLUSIVE_LOCK.bits(),
             timeout.as_millis() as _,
             key.as_vi_const_string() as _,
             ak.as_mut_ptr() as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ak.try_into().unwrap())
     }
 
     ///Relinquishes a lock for the specified resource.
     pub fn unlock(&self) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viUnlock(self.as_raw_ss()))?;
+        let ni_visa_result = unsafe{vs::viUnlock(self.as_raw_ss())};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -166,12 +176,13 @@ impl Instrument {
         event_kind: event::EventKind,
         mechanism: event::Mechanism,
     ) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viEnableEvent(
+        let ni_visa_result = unsafe{vs::viEnableEvent(
             self.as_raw_ss(),
             event_kind as _,
             mechanism as _,
             event::EventFilter::Null as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -186,11 +197,12 @@ impl Instrument {
         event_kind: event::EventKind,
         mechanism: event::Mechanism,
     ) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viDisableEvent(
+        let ni_visa_result = unsafe{vs::viDisableEvent(
             self.as_raw_ss(),
             event_kind as _,
             mechanism as _,
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Discards event occurrences for specified event types and mechanisms in a session.
@@ -205,11 +217,12 @@ impl Instrument {
         event: event::EventKind,
         mechanism: event::Mechanism,
     ) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viDiscardEvents(
+        let ni_visa_result = unsafe{vs::viDiscardEvents(
             self.as_raw_ss(),
             event as _,
             mechanism as _,
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Waits for an occurrence of the specified event for a given session.
@@ -226,13 +239,14 @@ impl Instrument {
     ) -> Result<event::Event> {
         let mut handler: vs::ViEvent = 0;
         let mut out_kind: vs::ViEventType = 0;
-        wrap_raw_error_in_unsafe!(vs::viWaitOnEvent(
+        let ni_visa_result = unsafe{vs::viWaitOnEvent(
             self.as_raw_ss(),
             event_kind as _,
             timeout.as_millis() as _,
             &mut out_kind as _,
             &mut handler as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         let kind = event::EventKind::try_from(out_kind).expect("should be valid event type");
         Ok(event::Event { handler, kind })
     }
@@ -262,13 +276,15 @@ impl Instrument {
     ///
     pub fn read_stb(&self) -> Result<u16> {
         let mut stb = 0;
-        wrap_raw_error_in_unsafe!(vs::viReadSTB(self.as_raw_ss(), &mut stb as *mut _))?;
+        let ni_visa_result = unsafe{vs::viReadSTB(self.as_raw_ss(), &mut stb as *mut _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(stb)
     }
 
     /// The viClear() operation clears the device input and output buffers.
     pub fn clear(&self) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viClear(self.as_raw_ss()))?;
+        let ni_visa_result = unsafe{vs::viClear(self.as_raw_ss())};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -284,11 +300,12 @@ impl Instrument {
         how: enums::assert::AssertIntrHow,
         status_id: vs::ViUInt32,
     ) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viAssertIntrSignal(
+        let ni_visa_result = unsafe{vs::viAssertIntrSignal(
             self.as_raw_ss(),
             how as _,
             status_id as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Asserts software or hardware trigger.
@@ -311,7 +328,8 @@ impl Instrument {
     /// # Trigger Reservation for PXI
     /// For PXI instruments, this operation reserves or releases (unreserves) a trigger line for use in external triggering. For PXI triggers, VI_TRIG_PROT_RESERVE and VI_TRIG_PROT_UNRESERVE are the only valid protocols.
     pub fn assert_trigger(&self, protocol: enums::assert::AssertTrigPro) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viAssertTrigger(self.as_raw_ss(), protocol as _))?;
+        let ni_visa_result = unsafe{vs::viAssertTrigger(self.as_raw_ss(), protocol as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -321,7 +339,8 @@ impl Instrument {
     ///
     /// Asserting SYSRESET (also known as HARD RESET in the VXI specification) should be used only when it is necessary to promptly terminate operation of all devices in a VXIbus system. This is a serious action that always affects the entire VXIbus system.
     pub fn assert_util_signal(&self, line: enums::assert::AssertBusSignal) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viAssertUtilSignal(self.as_raw_ss(), line as _))?;
+        let ni_visa_result = unsafe{vs::viAssertUtilSignal(self.as_raw_ss(), line as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -332,7 +351,7 @@ impl Instrument {
     /// * Note: If `buf` is empty, the `retCount` in [viBufRead](vs::viBufRead) is set to [VI_NULL](vs::VI_NULL), the number of bytes transferred is not returned. You may find this useful if you need to know only whether the operation succeeded or failed.
     pub fn buf_read(&self, buf: &mut [u8]) -> Result<usize> {
         let mut ret_cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viBufRead(
+        let ni_visa_result = unsafe{vs::viBufRead(
             self.as_raw_ss(),
             if !buf.is_empty() {
                 buf.as_mut_ptr()
@@ -341,7 +360,8 @@ impl Instrument {
             },
             buf.len() as _,
             &mut ret_cnt as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ret_cnt as _)
     }
 
@@ -354,7 +374,7 @@ impl Instrument {
     /// * Note: If `buf` is empty, the `retCount` in [viBufWrite](vs::viBufWrite) is set to [VI_NULL](vs::VI_NULL), the number of bytes transferred is not returned. You may find this useful if you need to know only whether the operation succeeded or failed.
     pub fn buf_write(&self, buf: &[u8]) -> Result<usize> {
         let mut ret_cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viBufWrite(
+        let ni_visa_result = unsafe{vs::viBufWrite(
             self.as_raw_ss(),
             if !buf.is_empty() {
                 buf.as_ptr()
@@ -363,13 +383,15 @@ impl Instrument {
             },
             buf.len() as _,
             &mut ret_cnt as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ret_cnt as _)
     }
 
     /// Sets the size for the formatted I/O and/or low-level I/O communication buffer(s).
     pub fn set_buf(&self, mask: flags::BufMask, size: usize) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viSetBuf(self.as_raw_ss(), mask.bits(), size as _))?;
+        let ni_visa_result = unsafe{vs::viSetBuf(self.as_raw_ss(), mask.bits(), size as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 }
@@ -391,7 +413,7 @@ impl Instrument {
     pub unsafe fn visa_read_async(&self, buf: &mut [u8]) -> Result<JobID> {
         let mut id: vs::ViJobId = 0;
         #[allow(unused_unsafe)]
-        wrap_raw_error_in_unsafe!(vs::viReadAsync(
+        wrap_raw_error_in_unsafe(vs::viReadAsync(
             self.as_raw_ss(),
             buf.as_mut_ptr(),
             buf.len() as _,
@@ -416,7 +438,7 @@ impl Instrument {
     pub unsafe fn visa_write_async(&self, buf: &[u8]) -> Result<JobID> {
         let mut id: vs::ViJobId = 0;
         #[allow(unused_unsafe)]
-        wrap_raw_error_in_unsafe!(vs::viWriteAsync(
+        wrap_raw_error_in_unsafe(vs::viWriteAsync(
             self.as_raw_ss(),
             buf.as_ptr(),
             buf.len() as _,
@@ -432,11 +454,12 @@ impl Instrument {
     /// If a user passes VI_NULL as the jobId value to viTerminate(), VISA will abort any calls in the current process executing on the specified vi. Any call that is terminated this way should return VI_ERROR_ABORT. Due to the nature of multi-threaded systems, for example where operations in other threads may complete normally before the operation viTerminate() has any effect, the specified return value is not guaranteed.
     ///
     pub fn terminate(&self, job_id: JobID) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viTerminate(
+        let ni_visa_result = unsafe{vs::viTerminate(
             self.as_raw_ss(),
             vs::VI_NULL as _,
             job_id.0
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Safe rust wrapper of [`Self::visa_read_async`]
@@ -464,7 +487,7 @@ impl Instrument {
     /// * Note: If `buf` is empty, the `retCount` in [viGpibCommand](vs::viGpibCommand) is set to [VI_NULL](vs::VI_NULL), the number of bytes transferred is not returned. You may find this useful if you need to know only whether the operation succeeded or failed.
     pub fn gpib_command(&self, buf: &[u8]) -> Result<usize> {
         let mut ret_cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viGpibCommand(
+        let ni_visa_result = unsafe{vs::viGpibCommand(
             self.as_raw_ss(),
             if !buf.is_empty() {
                 buf.as_ptr()
@@ -473,7 +496,8 @@ impl Instrument {
             },
             buf.len() as _,
             &mut ret_cnt as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ret_cnt as _)
     }
 
@@ -483,7 +507,8 @@ impl Instrument {
     ///
     /// It is generally not necessary to use the viGpibControlATN() operation in most applications. Other operations such as viGpibCommand() and viGpibPassControl() modify the ATN and/or CIC state automatically.
     pub fn gpib_control_atn(&self, mode: enums::gpib::AtnMode) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viGpibControlATN(self.as_raw_ss(), mode as _))?;
+        let ni_visa_result = unsafe{vs::viGpibControlATN(self.as_raw_ss(), mode as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -492,7 +517,8 @@ impl Instrument {
     /// The viGpibControlREN() operation asserts or unasserts the GPIB REN interface line according to the specified mode. The mode can also specify whether the device associated with this session should be placed in local state (before deasserting REN) or remote state (after asserting REN). This operation is valid only if the GPIB interface associated with the session specified by vi is currently the system controller.
 
     pub fn gpib_control_ren(&self, mode: enums::gpib::RenMode) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viGpibControlREN(self.as_raw_ss(), mode as _))?;
+        let ni_visa_result = unsafe{vs::viGpibControlREN(self.as_raw_ss(), mode as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 
@@ -510,11 +536,12 @@ impl Instrument {
         prim_addr: vs::ViUInt16,
         sec_addr: impl Into<Option<vs::ViUInt16>>,
     ) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viGpibPassControl(
+        let ni_visa_result = unsafe{vs::viGpibPassControl(
             self.as_raw_ss(),
             prim_addr as _,
             sec_addr.into().unwrap_or(vs::VI_NO_SEC_ADDR as _) as _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
     /// Pulse the interface clear line (IFC) for at least 100 microseconds.
@@ -523,7 +550,8 @@ impl Instrument {
     ///
 
     pub fn gpib_send_ifc(&self) -> Result<()> {
-        wrap_raw_error_in_unsafe!(vs::viGpibSendIFC(self.as_raw_ss(),))?;
+        let ni_visa_result = unsafe{vs::viGpibSendIFC(self.as_raw_ss(),)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(())
     }
 }

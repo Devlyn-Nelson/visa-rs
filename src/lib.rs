@@ -46,6 +46,7 @@
 //! ```
 
 use enums::{attribute, event};
+use visa_sys::ViStatus;
 use std::ffi::CStr;
 use std::{borrow::Cow, ffi::CString, fmt::Display, time::Duration};
 pub use visa_sys as vs;
@@ -212,18 +213,12 @@ impl From<enums::attribute::AttrStatus> for Result<enums::status::CompletionCode
 const SUCCESS: vs::ViStatus = vs::VI_SUCCESS as _;
 
 #[doc(hidden)]
-#[macro_export]
-macro_rules! wrap_raw_error_in_unsafe {
-    ($s:expr) => {
-        match unsafe { $s } {
-            state if state >= $crate::SUCCESS => $crate::Result::<
-                $crate::enums::status::CompletionCode,
-            >::Ok(state.try_into().unwrap()),
-            e => {
-                $crate::Result::<$crate::enums::status::CompletionCode>::Err(e.try_into().unwrap())
-            }
-        }
-    };
+fn wrap_raw_error_in_unsafe(s: ViStatus) -> crate::Result<crate::enums::status::CompletionCode>{
+    if let Ok(code) = s.try_into() {
+        crate::Result::<crate::enums::status::CompletionCode>::Ok(code)
+    }else{
+        crate::Result::<crate::enums::status::CompletionCode>::Err(s.try_into().unwrap())
+    }
 }
 
 /// Ability as the Default Resource Manager for VISA
@@ -273,13 +268,14 @@ pub trait AsResourceManager: AsRawSs {
         let mut list: vs::ViFindList = 0;
         let mut cnt: vs::ViUInt32 = 0;
         let mut instr_desc = new_visa_buf();
-        wrap_raw_error_in_unsafe!(vs::viFindRsrc(
+        let ni_visa_result = unsafe{vs::viFindRsrc(
             self.as_raw_ss(),
             expr.as_vi_const_string(),
             &mut list,
             &mut cnt,
             instr_desc.as_mut_ptr() as _,
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(ResList {
             list,
             cnt: cnt as _,
@@ -295,7 +291,7 @@ pub trait AsResourceManager: AsRawSs {
         !keysight impl visa will try to write at address vs::VI_NULL, cause exit code: 0xc0000005, STATUS_ACCESS_VIOLATION
         let mut instr_desc = new_visa_buf();
         let mut cnt: vs::ViUInt32 = 0;
-        wrap_raw_error_in_unsafe!(vs::viFindRsrc(
+        wrap_raw_error_in_unsafe(vs::viFindRsrc(
             self.as_raw_ss(),
             expr.as_vi_const_string(),
             vs::VI_NULL as _,
@@ -312,12 +308,13 @@ pub trait AsResourceManager: AsRawSs {
     fn parse_res(&self, res: &ResID) -> Result<(attribute::AttrIntfType, attribute::AttrIntfNum)> {
         let mut ty = 0;
         let mut num = 0;
-        wrap_raw_error_in_unsafe!(vs::viParseRsrc(
+        let ni_visa_result = unsafe{vs::viParseRsrc(
             self.as_raw_ss(),
             res.as_vi_const_string(),
             &mut ty as *mut _,
             &mut num as *mut _
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         unsafe {
             Ok((
                 attribute::AttrIntfType::new_unchecked(ty),
@@ -350,7 +347,7 @@ pub trait AsResourceManager: AsRawSs {
         let mut str1 = new_visa_buf();
         let mut str2 = new_visa_buf();
         let mut str3 = new_visa_buf();
-        wrap_raw_error_in_unsafe!(vs::viParseRsrcEx(
+        let ni_visa_result = unsafe{vs::viParseRsrcEx(
             self.as_raw_ss(),
             res.as_vi_const_string(),
             &mut ty as *mut _,
@@ -358,7 +355,8 @@ pub trait AsResourceManager: AsRawSs {
             str1.as_mut_ptr() as _,
             str2.as_mut_ptr() as _,
             str3.as_mut_ptr() as _,
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         unsafe {
             Ok((
                 attribute::AttrIntfType::new_unchecked(ty),
@@ -388,13 +386,16 @@ pub trait AsResourceManager: AsRawSs {
         open_timeout: Duration,
     ) -> Result<Instrument> {
         let mut instr: vs::ViSession = 0;
-        wrap_raw_error_in_unsafe!(vs::viOpen(
+
+        println!("test");
+        let ni_visa_result = unsafe{vs::viOpen(
             self.as_raw_ss(),
             res_name.as_vi_const_string(),
             access_mode.bits(),
             open_timeout.as_millis() as _,
             &mut instr as _,
-        ))?;
+        )};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(unsafe { Instrument::from_raw_ss(instr) })
     }
 
@@ -452,7 +453,8 @@ impl DefaultRM {
     ///
     pub fn new() -> Result<Self> {
         let mut new: vs::ViSession = 0;
-        wrap_raw_error_in_unsafe!(vs::viOpenDefaultRM(&mut new as _))?;
+        let ni_visa_result = unsafe{vs::viOpenDefaultRM(&mut new as _)};
+        wrap_raw_error_in_unsafe(ni_visa_result)?;
         Ok(Self(unsafe { OwnedSs::from_raw_ss(new) }))
     }
 }
@@ -484,10 +486,11 @@ impl ResList {
         }
         let next: ResID = self.instr_desc.try_into().unwrap();
         if self.cnt > 1 {
-            wrap_raw_error_in_unsafe!(vs::viFindNext(
+            let ni_visa_result = unsafe{vs::viFindNext(
                 self.list,
                 self.instr_desc.as_mut_ptr() as _
-            ))?;
+            )};
+            wrap_raw_error_in_unsafe(ni_visa_result)?;
         }
         self.cnt -= 1;
         Ok(Some(next))
