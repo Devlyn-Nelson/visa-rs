@@ -87,7 +87,7 @@ mod error {
             ErrorConnLost,
             ErrorMachineNavail,
             ErrorNpermission,
-            ErrorUnknown(i64),
+            ErrorUnknown(std::ffi::c_long),
         }
 }
 mod completion {
